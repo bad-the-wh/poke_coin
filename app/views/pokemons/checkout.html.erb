@@ -1,0 +1,20 @@
+<h1>Checkout</h1>
+
+<% if @pokemon.user == current_user %>
+  <p>You already own this Pokemon.</p>
+<% else %>
+  <%= form_for @pokemon, url: checkout_pokemon_path(@pokemon), method: :post do |f| %>
+    <!-- You may want to display Pokemon details here for the user -->
+    <p>Name: <%= @pokemon.name %></p>
+    <p>Price: <%= @pokemon.price %></p>
+    <!-- Add any other relevant details -->
+
+    <!-- Add hidden field to specify the action -->
+    <%= f.hidden_field :action, value: 'buy' %>
+
+    <!-- Add any additional form fields if needed -->
+
+    <!-- Add form submit button -->
+    <%= f.submit "Buy Pokemon" %>
+  <% end %>
+<% end %>

@@ -1,0 +1,10 @@
+<h1>Pokemon List</h1>
+
+<% @pokemon_list.each do |pokemon| %>
+  <div>
+    <h2><%= pokemon.name %></h2>
+    <p>Price: <%= pokemon.price %></p>
+    <!-- Add more details as needed -->
+    <%= link_to "Show", pokemon_path(pokemon) %>
+  </div>
+<% end %>

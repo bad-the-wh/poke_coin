@@ -1,0 +1,8 @@
+<h1>Add Money to Wallet</h1>
+
+<%= form_tag(recharge_wallet_user_path(current_user), method: :patch) do %>
+  <%= label_tag(:amount, 'Amount to Add') %>
+  <%= text_field_tag(:amount) %>
+
+  <%= submit_tag('Add Money') %>
+<% end %>

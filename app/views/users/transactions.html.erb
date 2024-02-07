@@ -1,0 +1,8 @@
+<h1>User Transactions</h1>
+
+<% @user_transactions.each do |transaction| %>
+  <p><strong>Action:</strong> <%= transaction.action %></p>
+  <p><strong>Pokemon:</strong> <%= transaction.pokemon.name %></p>
+  <p><strong>Created At:</strong> <%= transaction.created_at %></p>
+  <hr>
+<% end %>

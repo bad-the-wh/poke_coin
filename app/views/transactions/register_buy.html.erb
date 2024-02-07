@@ -1,0 +1,9 @@
+<h1>Buy Pokemon</h1>
+
+<% if @success %>
+  <p><%= @message %></p>
+<% else %>
+  <p><%= @message %></p>
+<% end %>
+
+<%= link_to "Back to Transactions", transactions_path %>

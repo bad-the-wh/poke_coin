@@ -1,59 +1,35 @@
-# syntax = docker/dockerfile:1
+# Dockerfile for Rails backend
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
-ARG RUBY_VERSION=3.3.0
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
+FROM ruby:3.3.0
 
-# Rails app lives here
-WORKDIR /rails
+WORKDIR /app
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+# Install system dependencies
+RUN apt-get update -qq && apt-get install -y build-essential libpq-dev nodejs yarn
 
+# Install Rails
+RUN gem install rails -v '7.1.3'
 
-# Throw-away build stage to reduce size of final image
-FROM base as build
+# Set environment variables
+ENV RAILS_ENV=development
 
-# Install packages needed to build gems
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libvips pkg-config
-
-# Install application gems
+# Install and cache app dependencies
 COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
-    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile --gemfile
+RUN bundle install
 
-# Copy application code
+# Create config directory and copy credentials
+COPY ./config/credentials.yml.enc config/
+
+# Copy master.key
+COPY ./config/master.key config/
+
+# Set read-only permissions for master.key during build
+RUN chown root:root ./config/master.key && chmod 400 ./config/master.key
+
+# Copy the application code into the container
 COPY . .
 
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
-
-
-# Final stage for app image
-FROM base
-
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libsqlite3-0 libvips && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy built artifacts: gems, application
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /rails /rails
-
-# Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
-
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-
-# Start the server by default, this can be overwritten at runtime
+# Expose port 3000
 EXPOSE 3000
-CMD ["./bin/rails", "server"]
+
+CMD ["rails", "server", "-b", "0.0.0.0"]
